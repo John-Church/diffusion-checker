@@ -12,7 +12,7 @@ An Obsidian plugin that automatically corrects spelling and grammar using a diff
 
 ## Installation
 
-1. Copy `main.js` and `manifest.json` to your vault's `.obsidian/plugins/diffusion-grammar-checker/` folder
+1. Run `bun build` and copy `main.js` and `manifest.json` to your vault's `.obsidian/plugins/diffusion-grammar-checker/` folder or run `./scripts/deploy-local.sh /path/to/your/vault` to both build and move the files.
 2. Reload Obsidian
 3. Enable the plugin in Settings → Community plugins
 4. Add your Inception Labs API key in the plugin settings
