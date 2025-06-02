@@ -14,10 +14,10 @@ const DEFAULT_SETTINGS: DiffusionGrammarSettings = {
 }
 
 export default class DiffusionGrammarPlugin extends Plugin {
-	settings: DiffusionGrammarSettings;
+	settings!: DiffusionGrammarSettings;
 	openai: OpenAI | null = null;
 	isProcessing: boolean = false;
-	statusBarItem: HTMLElement;
+	statusBarItem!: HTMLElement;
 
 	async onload() {
 		await this.loadSettings();
@@ -37,6 +37,7 @@ export default class DiffusionGrammarPlugin extends Plugin {
 		});
 
 		this.registerEvent(
+			// @ts-ignore - editor-change event exists but isn't in type definitions
 			this.app.workspace.on('editor-change', (editor: Editor, view: MarkdownView) => {
 				if (!this.settings.enableAutoCorrect || this.isProcessing) return;
 				
@@ -121,7 +122,7 @@ export default class DiffusionGrammarPlugin extends Plugin {
 			}
 		} catch (error) {
 			console.error('Error correcting text:', error);
-			new Notice('Failed to correct text: ' + error.message);
+			new Notice('Failed to correct text: ' + (error instanceof Error ? error.message : String(error)));
 		} finally {
 			this.isProcessing = false;
 			

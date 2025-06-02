@@ -35,4 +35,12 @@ bun run dev
 
 # Production build
 bun run build
+
+# Type check
+bun run typecheck
+
+# Deploy to local vault (for development)
+./scripts/deploy-local.sh /path/to/your/vault
+# Or set OBSIDIAN_VAULT_PATH in .env file and run:
+./scripts/deploy-local.sh
 ```
