@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "node esbuild.config.mjs",
-    "build": "node esbuild.config.mjs production"
+    "build": "node esbuild.config.mjs production",
+    "deploy": "bun run build && cp build/main.js manifest.json /Users/johnchurch/Documents/John-Vault-2/.obsidian/plugins/diffusion-grammar-checker/"
   },
   "devDependencies": {
     "@types/bun": "latest",
