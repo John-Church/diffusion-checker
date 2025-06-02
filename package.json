@@ -1,0 +1,20 @@
+{
+  "name": "diffusion-checker",
+  "module": "index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "node esbuild.config.mjs production"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^22.15.29",
+    "builtin-modules": "^5.0.0",
+    "esbuild": "^0.25.5",
+    "obsidian": "^1.8.7",
+    "openai": "^5.0.1"
+  },
+  "peerDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
