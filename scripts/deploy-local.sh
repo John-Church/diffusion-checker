@@ -3,6 +3,11 @@
 # Local deployment script for development
 # Usage: ./scripts/deploy-local.sh [vault-path]
 
+# Load .env file if it exists
+if [ -f .env ]; then
+    export $(cat .env | grep -v '^#' | xargs)
+fi
+
 VAULT_PATH="${1:-$OBSIDIAN_VAULT_PATH}"
 
 if [ -z "$VAULT_PATH" ]; then
