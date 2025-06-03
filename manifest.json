@@ -1,6 +1,6 @@
 {
-  "id": "diffusion-grammar-checker",
-  "name": "Diffusion Grammar Checker",
+  "id": "diffusion-checker",
+  "name": "Diffusion Checker",
   "version": "1.0.2",
   "minAppVersion": "0.15.0",
   "description": "Automatically corrects spelling and grammar using a diffusion text model.",
