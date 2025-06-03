@@ -4,7 +4,7 @@ An Obsidian plugin that automatically corrects spelling and grammar using a diff
 
 ## Features
 
-- **Auto-correction**: Automatically corrects paragraphs when you press Enter
+- **Auto-correction**: Automatically corrects content whenever you complete a paragraph or move your cursor from a section
 - **Manual correction**: Use the command palette to correct the current paragraph
 - **Visual feedback**: Text briefly turns italic and colored while being checked
 - **Status bar toggle**: Click the status bar item to quickly enable/disable auto-correction
