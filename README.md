@@ -14,6 +14,12 @@ In addition to being much faster than needing to manually go back and correct sp
 - **Status bar toggle**: Click the status bar item to quickly enable/disable auto-correction
 - **Customizable prompts**: Edit the system prompt to customize correction behavior
 
+
+
+https://github.com/user-attachments/assets/9f7a1839-5271-435b-9a07-7de84ef3d36c
+
+
+
 ## Usage
 
 - Write normally in your notes
