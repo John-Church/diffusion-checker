@@ -1,7 +1,7 @@
 {
   "id": "diffusion-checker",
   "name": "Diffusion Checker",
-  "version": "1.0.2",
+  "version": "1.0.0",
   "minAppVersion": "0.15.0",
   "description": "Automatically corrects spelling and grammar using a diffusion text model.",
   "author": "John Church",
