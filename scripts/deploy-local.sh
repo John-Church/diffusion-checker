@@ -26,6 +26,6 @@ echo "Creating plugin directory..."
 mkdir -p "$PLUGIN_DIR"
 
 echo "Copying files to $PLUGIN_DIR..."
-cp build/main.js manifest.json "$PLUGIN_DIR/"
+cp build/main.js build/manifest.json "$PLUGIN_DIR/"
 
 echo "Deployment complete!"

@@ -29,6 +29,7 @@ const DEFAULT_SETTINGS: DiffusionGrammarSettings = {
   checkLists: true,
 };
 
+
 export default class DiffusionGrammarPlugin extends Plugin {
   settings!: DiffusionGrammarSettings;
   openai: OpenAI | null = null;
@@ -38,18 +39,20 @@ export default class DiffusionGrammarPlugin extends Plugin {
   lastCheckedLines: Set<number> = new Set();
   lastCursorLine: number = -1;
   processingLines: Map<number, boolean> = new Map();
+  processingStatusItem: HTMLElement | null = null;
 
   async onload() {
     await this.loadSettings();
 
     this.initializeOpenAI();
+    
 
     // Add status bar item
     this.statusBarItem = this.addStatusBarItem();
     this.updateStatusBar();
 
     // Make it clickable
-    this.statusBarItem.onClickEvent(() => {
+    this.statusBarItem.addEventListener('click', () => {
       this.settings.enableAutoCorrect = !this.settings.enableAutoCorrect;
       this.saveSettings();
       this.updateStatusBar();
@@ -60,56 +63,51 @@ export default class DiffusionGrammarPlugin extends Plugin {
       );
     });
 
-    // Track edited content
-    this.registerEvent(
-      this.app.workspace.on(
-        // @ts-ignore - editor-change event exists but isn't in type definitions
-        "editor-change",
-        (editor: Editor, view: MarkdownView) => {
-          if (!this.settings.enableAutoCorrect || this.isProcessing) return;
+    // Track edited content using keyup event
+    this.registerDomEvent(document, "keyup", (evt: KeyboardEvent) => {
+      if (!this.settings.enableAutoCorrect || this.isProcessing) return;
 
-          const cursor = editor.getCursor();
-          const currentLine = cursor.line;
-          const currentLineText = editor.getLine(currentLine);
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (!activeView) return;
 
-          // Track edited content
-          if (currentLineText.trim().length > 0) {
-            this.lastEditedContent.set(currentLine, currentLineText);
-          }
+      const editor = activeView.editor;
+      if (!editor) return;
 
-          // Update cursor position
-          this.lastCursorLine = currentLine;
+      const cursor = editor.getCursor();
+      const currentLine = cursor.line;
+      const currentLineText = editor.getLine(currentLine);
 
-          // Check on new line - but only if we actually edited that line
-          if (currentLine > 0) {
-            const previousLineText = editor.getLine(currentLine - 1);
+      // Track edited content
+      if (currentLineText.trim().length > 0) {
+        this.lastEditedContent.set(currentLine, currentLineText);
+      }
 
-            if (currentLineText === "" && previousLineText !== "") {
-              // Only check if we have this line in our edited content
-              const editedText = this.lastEditedContent.get(currentLine - 1);
-              if (editedText) {
-                this.checkAndCorrectLine(editor, currentLine - 1, editedText);
-                this.lastEditedContent.delete(currentLine - 1);
-              }
-            }
+      // Update cursor position
+      this.lastCursorLine = currentLine;
+
+      // Check on Enter key
+      if (evt.key === "Enter" && currentLine > 0) {
+        const previousLineText = editor.getLine(currentLine - 1);
+
+        if (currentLineText === "" && previousLineText !== "") {
+          // Only check if we have this line in our edited content
+          const editedText = this.lastEditedContent.get(currentLine - 1);
+          if (editedText) {
+            this.checkAndCorrectLine(editor, currentLine - 1, editedText);
+            this.lastEditedContent.delete(currentLine - 1);
           }
         }
-      )
-    );
+      }
+    });
 
     // Check when clicking to a different location
     this.registerDomEvent(document, "click", (evt: MouseEvent) => {
       if (!this.settings.enableAutoCorrect || this.isProcessing) return;
 
-      const activeLeaf = this.app.workspace.activeLeaf;
-      if (
-        !activeLeaf ||
-        !activeLeaf.view ||
-        activeLeaf.view.getViewType() !== "markdown"
-      )
-        return;
+      const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (!activeView) return;
 
-      const editor = (activeLeaf.view as MarkdownView).editor;
+      const editor = activeView.editor;
       if (!editor) return;
 
       // Small delay to let cursor position update
@@ -240,8 +238,8 @@ export default class DiffusionGrammarPlugin extends Plugin {
     this.isProcessing = true;
     this.processingLines.set(lineNumber, true);
 
-    // Apply visual feedback
-    this.updateLineStyle(editor, lineNumber, true);
+    // Show processing status
+    this.showProcessingStatus();
 
     try {
       const response = await this.openai.chat.completions.create({
@@ -264,11 +262,8 @@ export default class DiffusionGrammarPlugin extends Plugin {
 
       if (correctedText && correctedText !== text) {
         editor.setLine(lineNumber, correctedText);
-        // Reapply style after line update since DOM might be recreated
-        this.updateLineStyle(editor, lineNumber, true);
       }
     } catch (error) {
-      console.error("Error correcting text:", error);
       new Notice(
         "Failed to correct text: " +
           (error instanceof Error ? error.message : String(error))
@@ -277,34 +272,24 @@ export default class DiffusionGrammarPlugin extends Plugin {
       this.isProcessing = false;
       this.processingLines.delete(lineNumber);
 
-      // Remove visual feedback immediately after API completes
-      this.updateLineStyle(editor, lineNumber, false);
+      // Hide processing status
+      this.hideProcessingStatus();
     }
   }
 
-  updateLineStyle(editor: Editor, lineNumber: number, isProcessing: boolean) {
-    const lineElement = this.getLineElement(editor, lineNumber);
-    if (lineElement) {
-      if (isProcessing) {
-        lineElement.style.fontStyle = "italic";
-        lineElement.style.color = "var(--text-accent)";
-        lineElement.style.transition = "all 0.3s ease";
-      } else {
-        lineElement.style.fontStyle = "";
-        lineElement.style.color = "";
-      }
+  showProcessingStatus() {
+    if (!this.processingStatusItem) {
+      this.processingStatusItem = this.addStatusBarItem();
     }
+    this.processingStatusItem.setText("🔄 Checking grammar...");
   }
-
-  getLineElement(editor: Editor, lineNumber: number): HTMLElement | null {
-    const editorView = (editor as any).cm;
-    if (!editorView) return null;
-
-    const linePos = editorView.state.doc.line(lineNumber + 1);
-    if (!linePos) return null;
-
-    const lineDOM = editorView.domAtPos(linePos.from);
-    return lineDOM?.node?.parentElement as HTMLElement;
+  
+  hideProcessingStatus() {
+    if (this.processingStatusItem) {
+      this.processingStatusItem.setText("");
+      this.processingStatusItem.remove();
+      this.processingStatusItem = null;
+    }
   }
 
   updateStatusBar() {
@@ -313,14 +298,18 @@ export default class DiffusionGrammarPlugin extends Plugin {
         ? "✓ Diffusion Checker"
         : "✗ Diffusion Checker"
     );
-    this.statusBarItem.style.cursor = "pointer";
     this.statusBarItem.setAttribute(
       "aria-label",
       "Click to toggle auto-correction"
     );
+    this.statusBarItem.style.cursor = "pointer";
   }
 
-  onunload() {}
+  onunload() {
+    if (this.processingStatusItem) {
+      this.processingStatusItem.remove();
+    }
+  }
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
